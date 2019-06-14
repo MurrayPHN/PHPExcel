@@ -10,7 +10,8 @@ namespace Asan\PHPExcel\Parser;
 use Asan\PHPExcel\Exception\ParserException;
 use Asan\PHPExcel\Exception\ReaderException;
 
-class Excel2007 {
+class Excel2007
+{
     const CELL_TYPE_SHARED_STR = 's';
 
     /**
@@ -114,7 +115,8 @@ class Excel2007 {
      * @throws ParserException|ReaderException
      * @param string $file
      */
-    public function loadZip($file) {
+    public function loadZip($file)
+    {
         $this->openFile($file);
 
         // Setting base date
@@ -137,7 +139,8 @@ class Excel2007 {
      *
      * @return $this
      */
-    public function ignoreEmptyRow($ignoreEmpty) {
+    public function ignoreEmptyRow($ignoreEmpty)
+    {
         $this->ignoreEmpty = $ignoreEmpty;
 
         return $this;
@@ -148,7 +151,8 @@ class Excel2007 {
      *
      * @return bool
      */
-    public function isIgnoreEmptyRow() {
+    public function isIgnoreEmptyRow()
+    {
         return $this->ignoreEmpty;
     }
 
@@ -159,7 +163,8 @@ class Excel2007 {
      *
      * @return $this
      */
-    public function setSheetIndex($index) {
+    public function setSheetIndex($index)
+    {
         if ($index != $this->sheetIndex) {
             $this->sheetIndex = $index;
 
@@ -174,7 +179,8 @@ class Excel2007 {
      *
      * @return int
      */
-    public function getSheetIndex() {
+    public function getSheetIndex()
+    {
         return $this->sheetIndex;
     }
 
@@ -184,10 +190,13 @@ class Excel2007 {
      * @throws ReaderException
      * @return array
      */
-    public function parseWorksheetInfo() {
+    public function parseWorksheetInfo()
+    {
         if ($this->sheets === null) {
             $workbookXML = simplexml_load_string(
-                $this->securityScan($this->zip->getFromName('xl/workbook.xml')), 'SimpleXMLElement', self::getLibXmlLoaderOptions()
+                $this->securityScan($this->zip->getFromName('xl/workbook.xml')),
+                'SimpleXMLElement',
+                self::getLibXmlLoaderOptions()
             );
 
             $this->sheets = [];
@@ -224,8 +233,10 @@ class Excel2007 {
                             }
                         } elseif ($xml->name == 'c' && $xml->nodeType == \XMLReader::ELEMENT) {
                             $columnLetter = preg_replace('{[^[:alpha:]]}S', '', $xml->getAttribute('r'));
-                        } elseif ($this->ignoreEmpty && !$nonEmpty && $xml->name == 'v'
-                            && $xml->nodeType == \XMLReader::ELEMENT && trim($xml->readString()) !== '') {
+                        } elseif (
+                            $this->ignoreEmpty && !$nonEmpty && $xml->name == 'v'
+                            && $xml->nodeType == \XMLReader::ELEMENT && trim($xml->readString()) !== ''
+                        ) {
 
                             $nonEmpty = true;
                         }
@@ -252,7 +263,8 @@ class Excel2007 {
      * @param int $position
      * @return string
      */
-    protected function getSharedString($position) {
+    protected function getSharedString($position)
+    {
         $value = '';
 
         $file = 'xl/sharedStrings.xml';
@@ -291,10 +303,13 @@ class Excel2007 {
      *
      * @throws ReaderException
      */
-    protected function parseStyles() {
+    protected function parseStyles()
+    {
         if ($this->styleXfs === null) {
             $stylesXML = simplexml_load_string(
-                $this->securityScan($this->zip->getFromName('xl/styles.xml')), 'SimpleXMLElement', self::getLibXmlLoaderOptions()
+                $this->securityScan($this->zip->getFromName('xl/styles.xml')),
+                'SimpleXMLElement',
+                self::getLibXmlLoaderOptions()
             );
 
             $this->styleXfs = $this->formats = [];
@@ -326,14 +341,16 @@ class Excel2007 {
     /**
      * Get worksheet XMLReader
      */
-    protected function getWorksheetXML() {
+    protected function getWorksheetXML()
+    {
         if ($this->worksheetXML === null) {
             $this->worksheetXML = new \XMLReader();
         }
 
         $this->worksheetXML->open(
             $this->tmpDir . '/xl/worksheets/sheet' . ($this->getSheetIndex() + 1) . '.xml',
-            null, self::getLibXmlLoaderOptions()
+            null,
+            self::getLibXmlLoaderOptions()
         );
     }
 
@@ -346,7 +363,8 @@ class Excel2007 {
      * @throws ReaderException
      * @return array|bool
      */
-    public function getRow($rowIndex, $columnLimit = 0) {
+    public function getRow($rowIndex, $columnLimit = 0)
+    {
         $this->parseStyles();
         $rowIndex === 0 && $this->getWorksheetXML();
 
@@ -360,8 +378,10 @@ class Excel2007 {
 
             // End of row
             if ($name == 'row') {
-                if (!$this->ignoreEmpty && $type == \XMLReader::ELEMENT
-                    && $rowIndex+1 != (int)$this->worksheetXML->getAttribute('r')) {
+                if (
+                    !$this->ignoreEmpty && $type == \XMLReader::ELEMENT
+                    && $rowIndex + 1 != (int)$this->worksheetXML->getAttribute('r')
+                ) {
 
                     $this->worksheetXML->moveToElement();
                     break;
@@ -377,7 +397,7 @@ class Excel2007 {
             }
 
             switch ($name) {
-                // Cell
+                    // Cell
                 case 'c':
                     if ($type == \XMLReader::END_ELEMENT) {
                         continue;
@@ -395,7 +415,7 @@ class Excel2007 {
 
                     break;
 
-                // Cell value
+                    // Cell value
                 case 'v':
                 case 'is':
                     if ($type == \XMLReader::END_ELEMENT) {
@@ -429,7 +449,8 @@ class Excel2007 {
     /**
      * Close ZipArchive、XMLReader and remove temp dir
      */
-    public function __destruct() {
+    public function __destruct()
+    {
         if ($this->zip && $this->tmpDir) {
             $this->zip->close();
         }
@@ -455,11 +476,12 @@ class Excel2007 {
      *
      * @param string $dir
      */
-    protected function removeDir($dir) {
-        if($dir && is_dir($dir)) {
+    protected function removeDir($dir)
+    {
+        if ($dir && is_dir($dir)) {
             $handle = opendir($dir);
 
-            while($item = readdir($handle)) {
+            while ($item = readdir($handle)) {
                 if ($item != '.' && $item != '..') {
                     is_file($item = $dir . '/' . $item) ? unlink($item) : $this->removeDir($item);
                 }
@@ -479,7 +501,8 @@ class Excel2007 {
      * @throws \Exception
      * @return string Formatted cell value
      */
-    private function formatValue($value, $index) {
+    private function formatValue($value, $index)
+    {
         if (!is_numeric($value)) {
             return $value;
         }
@@ -625,9 +648,9 @@ class Excel2007 {
                 return (string)$value;
             } elseif ($format['type'] == 'Percentage') { // Percentages
                 if ($format['code'] === '0%') {
-                    $value = round(100*$value, 0) . '%';
+                    $value = round(100 * $value, 0) . '%';
                 } else {
-                    $value = sprintf('%.2f%%', round(100*$value, 2));
+                    $value = sprintf('%.2f%%', round(100 * $value, 2));
                 }
             } elseif ($format['type'] == 'DateTime') { // Dates and times
                 $days = (int)$value;
@@ -642,7 +665,7 @@ class Excel2007 {
 
                 // Here time is converted to seconds
                 // Some loss of precision will occur
-                $seconds = $time ? (int)($time*86400) : 0;
+                $seconds = $time ? (int)($time * 86400) : 0;
 
                 $value = clone self::$baseDate;
                 $value->add(new \DateInterval('P' . $days . 'D' . ($seconds ? 'T' . $seconds . 'S' : '')));
@@ -666,11 +689,13 @@ class Excel2007 {
                         $GCD = self::GCD($decimal, $decimalDivisor);
                     }
 
-                    $adjDecimal = $decimal/$GCD;
-                    $adjDecimalDivisor = $decimalDivisor/$GCD;
+                    $adjDecimal = $decimal / $GCD;
+                    $adjDecimalDivisor = $decimalDivisor / $GCD;
 
-                    if (strpos($format['code'], '0') !== false || strpos($format['code'], '#') !== false
-                        || substr($format['code'], 0, 3) == '? ?') {
+                    if (
+                        strpos($format['code'], '0') !== false || strpos($format['code'], '#') !== false
+                        || substr($format['code'], 0, 3) == '? ?'
+                    ) {
 
                         // The integer part is shown separately apart from the fraction
                         $value = ($value < 0 ? '-' : '') . $integer ? $integer . ' '
@@ -682,11 +707,14 @@ class Excel2007 {
                     }
                 } else {
                     // Scaling
-                    $value = $value/$format['scale'];
+                    $value = $value / $format['scale'];
                     if (!empty($format['minWidth']) && $format['decimals']) {
                         if ($format['thousands']) {
                             $value = number_format(
-                                $value, $format['precision'], self::$decimalSeparator, self::$thousandSeparator
+                                $value,
+                                $format['precision'],
+                                self::$decimalSeparator,
+                                self::$thousandSeparator
                             );
 
                             $value = preg_replace('/(0+)(\.?)(0*)/', $value, $format['code']);
@@ -720,7 +748,8 @@ class Excel2007 {
      *
      * @return int
      */
-    private static function GCD($number1, $number2) {
+    private static function GCD($number1, $number2)
+    {
         $number1 = abs($number1);
         $number2 = abs($number2);
 
@@ -745,7 +774,8 @@ class Excel2007 {
      *
      * @throws ParserException|ReaderException
      */
-    public function openFile($file) {
+    public function openFile($file)
+    {
         // Check if file exists
         if (!file_exists($file) || !is_readable($file)) {
             throw new ReaderException("Could not open file [$file] for reading! File does not exist.");
@@ -760,18 +790,16 @@ class Excel2007 {
             // check if it is an OOXML archive
             $rels = simplexml_load_string(
                 $this->securityScan($this->zip->getFromName('_rels/.rels')),
-                'SimpleXMLElement', self::getLibXmlLoaderOptions()
+                'SimpleXMLElement',
+                self::getLibXmlLoaderOptions()
             );
 
             if ($rels !== false) {
                 foreach ($rels->Relationship as $rel) {
-                    switch ($rel["Type"]) {
-                        case "http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument":
-                            if ($rel["Target"] == '/xl/workbook.xml') {
-                                $xl = true;
-                            }
-
-                            break;
+                    if ($rel["Type"] === "http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument") {
+                        if (strpos($rel["Target"], 'xl/workbook.xml') !== false) {
+                            $xl = true;
+                        }
                     }
                 }
             }
@@ -790,7 +818,8 @@ class Excel2007 {
      * @throws ReaderException
      * @return string
      */
-    protected function securityScan($xml) {
+    protected function securityScan($xml)
+    {
         $pattern = sprintf('/\\0?%s\\0?/', implode('\\0?', str_split('<!DOCTYPE')));
 
         if (preg_match($pattern, $xml)) {
@@ -807,7 +836,8 @@ class Excel2007 {
      *
      * @param int $options Default options for libxml loader
      */
-    public static function setLibXmlLoaderOptions($options = null) {
+    public static function setLibXmlLoaderOptions($options = null)
+    {
         if (is_null($options) && defined(LIBXML_DTDLOAD)) {
             $options = LIBXML_DTDLOAD | LIBXML_DTDATTR;
         }
@@ -825,7 +855,8 @@ class Excel2007 {
      *
      * @return int Default options for libxml loader
      */
-    public static function getLibXmlLoaderOptions() {
+    public static function getLibXmlLoaderOptions()
+    {
         if (is_null(self::$libXmlLoaderOptions) && defined(LIBXML_DTDLOAD)) {
             self::setLibXmlLoaderOptions(LIBXML_DTDLOAD | LIBXML_DTDATTR);
         }
