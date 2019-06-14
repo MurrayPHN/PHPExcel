@@ -767,7 +767,7 @@ class Excel2007 {
                 foreach ($rels->Relationship as $rel) {
                     switch ($rel["Type"]) {
                         case "http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument":
-                            if ($rel["Target"] == 'xl/workbook.xml') {
+                            if ($rel["Target"] == '/xl/workbook.xml') {
                                 $xl = true;
                             }
 
