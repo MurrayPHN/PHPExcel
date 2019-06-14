@@ -796,9 +796,10 @@ class Excel2007
 
             if ($rels !== false) {
                 foreach ($rels->Relationship as $rel) {
-                    if ($rel["Type"] === "http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument") {
+                    if ((string)$rel["Type"] === "http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument") {
                         if (strpos($rel["Target"], 'xl/workbook.xml') !== false) {
                             $xl = true;
+                            break;
                         }
                     }
                 }
